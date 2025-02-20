@@ -19,10 +19,39 @@ This repository includes:
 ## 🛝 Try it out!
 
 ### 🛠️ Installation
+To reproduce our simulation results, install our conda environment on a Linux machine with Nvidia GPU. 
 
+1. Install Isaac Gym
+Download the Isaac Gym Preview release from the [website](https://developer.nvidia.com/isaac-gym), then follow the installation instructions in the documentation.
+2. Clone this repo
+    ```
+    git clone https://github.com/Cold114514/ET-SEED.git
+    ```
+
+3. Install environment: Use Mambaforge (strongly recommended):
+    ```
+    mamba env create -f conda_environment.yaml
+    conda activate equi
+    ```
+    or use Anaconda (not recommended):
+    ```
+    conda env create -f conda_environment.yaml
+    conda activate equi
+    ```
+
+### 📚 Demonstration Generation
+The following code generates demonstrations for simulated environments, you can change toy_env.py with other environments files.
+```
+python etseed/env/toy_env.py
 ```
 
+
+### 🚀 Training
+The following code runs training for our method. Fill the dataset path with the data_out_dir argument in the previous section.
 ```
+python train.py
+```
+
 
 ## 🙏 Acknowledgement
 
