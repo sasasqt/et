@@ -6,10 +6,10 @@ _C = CN()
 _C.name = 'isaac_default'
 
 # Set True to run headless without creating a viewer window
-_C.headless = False
+_C.headless = True
 
 # Disable graphics context creation, no viewer window is created, and no headless rendering is available
-_C.nographics = False
+_C.nographics = True
 
 _C.pipeline = "gpu"
 

@@ -1,12 +1,12 @@
 import os
-os.environ["CUDA_VISIBLE_DEVICES"] = "1"
+#os.environ["CUDA_VISIBLE_DEVICES"] = "1"
 import numpy as np
 import torch
 import time
-torch.manual_seed(3407)
+torch.manual_seed(42)
 import torch.nn as nn
 import wandb
-from SE3EquivManip.utils.loss_utils import compute_loss
+from etseed.utils.loss_utils import compute_loss
 from diffusers.optimization import get_scheduler
 from tqdm.auto import tqdm
 
@@ -14,23 +14,23 @@ from tqdm.auto import tqdm
 from pymunk.space_debug_draw_options import SpaceDebugColor
 from skvideo.io import vwrite
 from pdb import set_trace as bp
-from SE3EquivManip.dataset.toy_dataset import ToyDataset
-from SE3EquivManip.model.se3_transformer.equinet import SE3ManiNet_Invariant, SE3ManiNet_Equivariant_Separate
-from SE3EquivManip.utils.SE3diffusion_scheduler import DiffusionScheduler, DiffusionScheduler_vanilla
-from SE3EquivManip.utils.group_utils import SE3_to_se2,se2_to_SE3
+from etseed.dataset.toy_dataset import ToyDataset
+from etseed.model.se3_transformer.equinet import SE3ManiNet_Invariant, SE3ManiNet_Equivariant_Separate
+from etseed.utils.SE3diffusion_scheduler import DiffusionScheduler, DiffusionScheduler_vanilla
+from etseed.utils.group_utils import SE3_to_se2,se2_to_SE3
 
 
 # Configure parameters
 config = {
-    "dataset_path": "/home/yue.chen/work/Robotics/SE3-EquivManip/log/50_rotate_triangle.npy", # replace with your data path
+    "dataset_path": "/home/i53/student/kyang/ET-SEED/log/demo/rotate_triangle/50_rotate_triangle.npy", # replace with your data path
     "save_path": "log",
     "task_name": "rotate_triangle",
     "pred_horizon": 4,
-    "obs_horizon": 1,
+    "obs_horizon": 2,
     "action_horizon": 4,
     "T_a": 4,
     "batch_size": 1,
-    "checkpoint_path": "",  # replace with your checkpoint path
+    "checkpoint_path": "/home/i53/student/kyang/ET-SEED/log/rotate_triangle_train/20250305-210019/ckpts/epoch_5000_model.pth",  # replace with your checkpoint path
 }
 
 # Create the dataset and data loader
@@ -123,24 +123,24 @@ def test_batch(nets, noise_scheduler, nbatch, device):
                 device = device
             )
             
-        loss, dist_R, dist_T = compute_loss(H_0.squeeze(0), naction.squeeze(0))
-        # print("loss: ", loss)
-        loss_cpu = loss.item()
-        if test_equiv:
-            dist_equiv_r = dist_R
-            dist_equiv_t = dist_T
-        else:
-            dist_invar_r = dist_R
-            dist_invar_t = dist_T
-        wandb.log({"test_dist_R": dist_R})
-        wandb.log({"test_dist_T": dist_T})
-        wandb.log({"test_loss_cpu": loss_cpu})
-        if test_equiv:
-            wandb.log({"test_dist_R_eq": dist_equiv_r})
-            wandb.log({"test_dist_T_eq": dist_equiv_t})
-        else:
-            wandb.log({"test_dist_R_in": dist_invar_r})
-            wandb.log({"test_dist_T_in": dist_invar_t})
+            loss, dist_R, dist_T = compute_loss(H_0.squeeze(0), naction.squeeze(0))
+            # print("loss: ", loss)
+            loss_cpu = loss.item()
+            if test_equiv:
+                dist_equiv_r = dist_R
+                dist_equiv_t = dist_T
+            else:
+                dist_invar_r = dist_R
+                dist_invar_t = dist_T
+            wandb.log({"test_dist_R": dist_R})
+            wandb.log({"test_dist_T": dist_T})
+            wandb.log({"test_loss_cpu": loss_cpu})
+            if test_equiv:
+                wandb.log({"test_dist_R_eq": dist_equiv_r})
+                wandb.log({"test_dist_T_eq": dist_equiv_t})
+            else:
+                wandb.log({"test_dist_R_in": dist_invar_r})
+                wandb.log({"test_dist_T_in": dist_invar_t})
     return loss_cpu
 
 
@@ -152,6 +152,7 @@ def main():
     noise_scheduler = DiffusionScheduler()
     wandb.init(
         project="SE3-Equivariant-Manipulation",
+        name = time.strftime("%Y%m%d-%H%M%S"),
         notes=time.strftime("%Y%m%d-%H%M%S"),
         config={
             "task": config["task_name"],
@@ -166,10 +167,13 @@ def main():
     )
     test_losses = []
     with tqdm(dataloader, desc='Test Batch') as tepoch:
+        cnt=0
         for nbatch in tepoch:
+            wandb.log({"diffusing":cnt})
             loss_cpu = test_batch(nets, noise_scheduler, nbatch, device)
             test_losses.append(loss_cpu)
             tepoch.set_postfix(loss=loss_cpu)
+            cnt+=1
     avg_test_loss = np.mean(test_losses)
     wandb.log({'test_loss': avg_test_loss})
     print(f"Test Done! Average Test Loss: {avg_test_loss}")
