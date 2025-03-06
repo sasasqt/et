@@ -175,8 +175,8 @@ class SE3ManiNet_Invariant(ExtendedModule):
                 "0": num_fib_in[0], 
             }),
             fiber_out=Fiber({
-                # "0": 3,
-                "1": 1, 
+                 "0": 3,
+                #"1": 1, 
             }),
             num_layers= 4,
             num_degrees= 3,
@@ -192,8 +192,8 @@ class SE3ManiNet_Invariant(ExtendedModule):
                 "0": num_fib_in[0], 
             }),
             fiber_out=Fiber({
-                # "0": num_fib_out[0],
-                "1": 3
+                 "0": num_fib_out[0],
+                #"1": 3
             }),
             num_layers= 4,
             num_degrees= 4,
